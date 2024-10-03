@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: cats
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+    ports:
+      - "5500:5432"
+#     restart: always
+
+  web:
+    build: .
+    ports:
+      - "${SERVER_PORT:-8000}:8000"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/cats
+      - DJANGO_SETTINGS_MODULE=cats.settings
+    depends_on:
+      - db
+
+  migrations:
+    build: .
+  #   environment:
+  #     DJANGO_SETTINGS_MODULE: cats.settings
+    command: >
+      sh -c "python cats/manage.py makemigrations && python cats/manage.py migrate"
+    depends_on:
+      - db
+      - web
+
+volumes:
+  pgdata:
