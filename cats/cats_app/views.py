@@ -1,46 +1,90 @@
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from cats_app.serializers import CatSerializer
-from cats_app.models import Cat
+from cats_app.serializers import CatSerializer, KindSerializer, CatDetailedSerializer
+from cats_app.models import Cat, Kind, User
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
+from django.db.models import Q
+
+@api_view(['Get'])
+def get_kinds(request, format=None):
+    try:
+        kinds = Kind.objects.all()
+        serializer = KindSerializer(kinds, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class Cats(APIView):
     model_class = Cat
     serializer_class = CatSerializer
 
     def get(self, request, format=None):
-        cats = self.model_class.objects.all()
-        serializer = self.serializer_class(cats, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            cats = self.model_class.objects.filter(is_deleted=False)
+            serializer = self.serializer_class(cats, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def post(self, request, format=None):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        try:
+            serializer = CatDetailedSerializer(data=request.data)
+            kind_name = request.data['kind']
+            kind, _ = Kind.objects.get_or_create(name=kind_name)
+            if serializer.is_valid():
+                serializer.save(kind=kind)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['Get'])
+def get_filtered_cats(request, format=None):
+    try:
+        target_kind = request.query_params.get("kind", '')
+        filters = Q(kind=target_kind) & Q(is_deleted=False)
+        cats = Cat.objects.filter(filters)
+        serializer = CatSerializer(cats, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class CatDetail(APIView):
     model_class = Cat
-    serializer_class = CatSerializer
+    serializer_class = CatDetailedSerializer
 
     def get(self, request, pk, format=None):
-        cat = get_object_or_404(self.model_class, pk=pk)
-        serializer = self.serializer_class(cat)
-        return Response(serializer.data)
+        try:
+            cat = get_object_or_404(self.model_class.objects.filter(is_deleted=False), pk=pk)
+            serializer = self.serializer_class(cat)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
     def put(self, request, pk, format=None):
-        cat = get_object_or_404(self.model_class, pk=pk)
-        serializer = self.serializer_class(cat, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            cat = get_object_or_404(Cat, pk=pk)
+            kind_name = request.data['kind']
+            kind, _ = Kind.objects.get_or_create(name=kind_name)
+            cat_serializer = CatSerializer(cat, data=request.data, partial=True)
+            if cat_serializer.is_valid():
+                cat_serializer.save(kind=kind)
+                return Response(cat_serializer.data)
+            else:
+                return Response(cat_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def delete(self, request, pk, format=None):
-        cat = get_object_or_404(self.model_class, pk=pk)
-        cat.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+        try:
+            cat = get_object_or_404(Cat, pk=pk)
+            cat.is_deleted = True
+            cat.save()
+            return Response({"status": "success", "is_deleted": cat.is_deleted}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
