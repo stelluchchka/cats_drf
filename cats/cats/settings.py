@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -38,6 +39,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    # 'rest_auth',
+    # 'rest_auth.registration',
+    # 'rest_auth.users',
     'cats_app',
 ]
 
@@ -104,6 +110,29 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = 'cats_app.User'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+SIMPLE_JWT = {
+
+    'ROTATE_REFRESH_TOKENS': True,
+
+    'BLACKLIST_AFTER_ROTATION': True,
+
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
+
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+
+}
+
+REST_AUTH = {
+    'USER_DETAILS_SERIALIZER': 'cats_app.serializers.UserSerializer',
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
