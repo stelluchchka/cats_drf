@@ -13,6 +13,7 @@ from rest_framework.exceptions import PermissionDenied
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.exceptions import ValidationError
 import json
+from cats_app.permissions import IsOwnerOrReadOnly
 
 class RegisterView(APIView):
     def post(self, request):
@@ -33,21 +34,16 @@ class RegisterView(APIView):
                 'is_superuser': user.is_superuser,
             })
 
-            token_header = {
-                'Authorization': f'Bearer {refresh.access_token}'
-            }
-            request.META['HTTP_AUTHORIZATION'] = f'Bearer {refresh.access_token}'
             return Response({
                 'user': user.username,
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
-                'headers': json.dumps(token_header)
             }, status=status.HTTP_201_CREATED)
 
         except ValidationError as ve:
             return Response({'error': ve.detail}, status=status.HTTP_400_BAD_REQUEST)
         except ObjectDoesNotExist:
-            return Response({'error': 'Пользователь с таким именем пользователя уже существует'}, status=HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Пользователь с таким именем пользователя уже существует'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -84,7 +80,7 @@ class LoginView(APIView):
 
 class LogoutView(APIView):
     def post(self, request):
-        refresh_token = request.data.get('refresh_token')
+        refresh_token = request.data.get('refresh')
         if not refresh_token:
             return Response({'error': 'Необходим Refresh token'},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -98,7 +94,6 @@ class LogoutView(APIView):
         return Response({'success': 'Выход успешен'}, status=status.HTTP_200_OK)
     
 @api_view(['Get'])
-@permission_classes([IsAuthenticated])
 def get_kinds(request, format=None):
     try:
         kinds = Kind.objects.all()
@@ -121,13 +116,12 @@ class Cats(APIView):
 
     def post(self, request):
         try:
-            data = request.data.copy()
-            data['user'] = request.user.id
-            serializer = CatDetailedSerializer(data=data)
-            kind_name = data['kind']
+            user = request.user
+            serializer = CatDetailedSerializer(data=request.data)
+            kind_name = request.data['kind']
             kind, _ = Kind.objects.get_or_create(name=kind_name)
             if serializer.is_valid():
-                serializer.save(kind=kind)
+                serializer.save(kind=kind, user=user)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -137,8 +131,11 @@ class Cats(APIView):
 @api_view(['Get'])
 def get_filtered_cats(request, format=None):
     try:
-        target_kind = request.query_params.get("kind", '')
-        filters = Q(kind=target_kind) & Q(is_deleted=False)
+        filters = Q(is_deleted=False)
+        target_kind_name = request.query_params.get("kind", None)
+        if target_kind_name:
+            target_kind = Kind.objects.get(name=target_kind_name)
+            filters &= Q(kind=target_kind)
         cats = Cat.objects.filter(filters)
         serializer = CatSerializer(cats, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -149,6 +146,7 @@ def get_filtered_cats(request, format=None):
 class CatDetail(APIView):
     model_class = Cat
     serializer_class = CatDetailedSerializer
+    permission_classes = [IsOwnerOrReadOnly]
 
     def get(self, request, pk, format=None):
         try:
@@ -162,10 +160,10 @@ class CatDetail(APIView):
     def put(self, request, pk, format=None):
         try:
             cat = get_object_or_404(Cat, pk=pk)
+            cat_serializer = CatDetailedSerializer(cat, data=request.data, partial=True)
             kind_name = request.data['kind']
-            kind, _ = Kind.objects.get_or_create(name=kind_name)
-            cat_serializer = CatSerializer(cat, data=request.data, partial=True)
-            if cat_serializer.is_valid():
+            if kind_name and cat_serializer.is_valid():
+                kind, _ = Kind.objects.get_or_create(name=kind_name)
                 cat_serializer.save(kind=kind)
                 return Response(cat_serializer.data)
             else:
