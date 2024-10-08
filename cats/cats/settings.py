@@ -41,10 +41,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
-    # 'rest_auth',
-    # 'rest_auth.registration',
-    # 'rest_auth.users',
     "cats_app",
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -87,7 +85,8 @@ DATABASES = {
         "NAME": "cats",
         "USER": "postgres",
         "PASSWORD": "1234",
-        "HOST": "db",
+        # "HOST": "db",
+        "HOST": "localhost",
         "PORT": 5432,
     }
 }
@@ -150,3 +149,7 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+SWAGGER_SETTINGS = {
+    'DOC_EXPANSION': 'list',
+}

@@ -32,3 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
         # extra_kwargs = {
         #     'password': {'write_only': True},
         # }
+
+class LoginResponseSerializer(serializers.Serializer):
+    refresh = serializers.CharField(required=True, allow_blank=False)
+    access = serializers.CharField(required=True, allow_blank=False)
