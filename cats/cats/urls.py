@@ -23,19 +23,21 @@ schema_view = get_schema_view(
    permission_classes=(permissions.AllowAny,),
 )
 
-
 router = routers.DefaultRouter()
 
 urlpatterns = [
     path("", include(router.urls)),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("register/", views.RegisterView.as_view(), name="register"),
-    path("login/", views.LoginView.as_view(), name="login"),
-    path("logout/", views.LogoutView.as_view(), name="logout"),
-    path(r"kinds/", views.get_kinds, name="kinds-list"),
-    path(r"cats/", views.Cats.as_view(), name="cats-list"),
-    path(r"cats/<int:pk>/", views.CatDetail.as_view(), name="cat-detail"),
-    path(r"filtered_cats/", views.get_filtered_cats, name="filtered_cats-list"),
+    path("register/", views.register, name="register"),
+    path("login/", views.login, name="login"),
+    path("logout/", views.logout, name="logout"),
+    path("kinds/", views.get_kinds, name="kinds-list"),
+    path("filtered_cats/", views.get_filtered_cats, name="filtered_cats-list"),
+    path("cats/", views.get_cats, name="cats-list"),
+    path("cats/post/", views.post_cats, name="post_cats"),
+    path("cats/<int:pk>/", views.get_cat, name="cat-detail"),
+    path("cats/put/<int:pk>/", views.put_cat, name="cat-put"),
+    path("cats/delete/<int:pk>/", views.delete_cat, name="cat-delete"), 
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
