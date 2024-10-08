@@ -25,11 +25,24 @@ def create_test_data(apps, schema_editor):
         name='Siamese'
     )
 
+    Kind.objects.create(
+        name='Asian'
+    )
+
     Cat.objects.create(
         color='Gray',
         age=3,
-        description='Test cat',
-        kind_id=Kind.objects.first().id
+        description='Test cat1',
+        kind_id=1,
+        user_id=1
+    )
+
+    Cat.objects.create(
+        color='Black',
+        age=24,
+        description='Test cat2',
+        kind_id=2,
+        user_id=2
     )
 
 class Migration(migrations.Migration):
