@@ -33,7 +33,6 @@ urlpatterns = [
     path("login/", views.login, name="login"),
     path("logout/", views.logout, name="logout"),
     path("kinds/", views.get_kinds, name="kinds-list"),
-    path("filtered_cats/", views.get_filtered_cats, name="filtered_cats-list"),
     path("cats/", views.get_cats, name="cats-list"),
     path("cats/post/", views.post_cats, name="post_cats"),
     path("cats/<int:pk>/", views.get_cat, name="cat-detail"),

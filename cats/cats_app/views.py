@@ -80,7 +80,7 @@ def register(request):
         return Response({"error": ve.detail}, status=status.HTTP_400_BAD_REQUEST)
     except ObjectDoesNotExist:
         return Response(
-            {"error": "Пользователь с таким именем пользователя уже существует"},
+            {"error": "Пользователь с таким никнеймом уже существует"},
             status=status.HTTP_400_BAD_REQUEST,
         )
     except Exception as e:
@@ -92,9 +92,7 @@ def register(request):
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            "username": openapi.Schema(
-                type=openapi.TYPE_STRING, description="Имя пользователя"
-            ),
+            "username": openapi.Schema(type=openapi.TYPE_STRING, description="Никнейм"),
             "password": openapi.Schema(type=openapi.TYPE_STRING, description="Пароль"),
         },
     ),
@@ -113,9 +111,7 @@ def login(request):
         password = request.data.get("password")
 
         if not all([username, password]):
-            raise PermissionDenied(
-                detail="Необходимы оба поля: имя пользователя и пароль"
-            )
+            raise PermissionDenied(detail="Необходимы оба поля: никнейм и пароль")
 
         user = authenticate(request, username=username, password=password)
 
@@ -178,7 +174,7 @@ def logout(request):
     method="get",
     operation_description="Получение списка пород",
     responses={
-        200: openapi.Response("Успешное получение", KindSerializer),
+        200: openapi.Response("Успех", KindSerializer),
         500: openapi.Response("Внутренняя ошибка сервера"),
     },
 )
@@ -200,19 +196,19 @@ def get_kinds(request, format=None):
             name="kind",
             in_=openapi.IN_QUERY,
             type=openapi.TYPE_STRING,
-            description="Порда кошки для фильтрации",
+            description="Порода котенка для фильтрации",
             required=False,
         ),
     ],
-    operation_description="Получение отфильтрованных кошек",
+    operation_description="Получение списка котят с возможностью фильтрации по породе",
     responses={
-        200: openapi.Response("Успешное получение", CatSerializer(many=True)),
-        404: openapi.Response("Не найдено кошек такой породы"),
+        200: openapi.Response("Успех", CatSerializer(many=True)),
+        404: openapi.Response("Не найдено котят"),
     },
 )
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def get_filtered_cats(request, format=None):
+def get_cats(request, format=None):
     try:
         filters = Q(is_deleted=False)
         target_kind_name = request.query_params.get("kind", None)
@@ -227,42 +223,27 @@ def get_filtered_cats(request, format=None):
 
 
 @swagger_auto_schema(
-    method="get",
-    operation_description="Получение списка кошек",
-    responses={
-        200: openapi.Response("Успешное получение", CatSerializer(many=True)),
-        404: openapi.Response("Не найдено кошек"),
-    },
-)
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def get_cats(request, format=None):
-    try:
-        cats = Cat.objects.filter(is_deleted=False)
-        serializer = CatSerializer(cats, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
-
-
-@swagger_auto_schema(
     method="post",
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            "color": openapi.Schema(type=openapi.TYPE_STRING, description="Цвет кошки"),
+            "color": openapi.Schema(
+                type=openapi.TYPE_STRING, description="Цвет котенка"
+            ),
             "age": openapi.Schema(
-                type=openapi.TYPE_INTEGER, description="Возраст кошки в месяцах"
+                type=openapi.TYPE_INTEGER, description="Возраст котенка в месяцах"
             ),
             "description": openapi.Schema(
-                type=openapi.TYPE_STRING, description="Описание кошки"
+                type=openapi.TYPE_STRING, description="Описание котенка"
             ),
-            "kind": openapi.Schema(type=openapi.TYPE_STRING, description="Порда кошки"),
+            "kind": openapi.Schema(
+                type=openapi.TYPE_STRING, description="Порода котенка"
+            ),
         },
     ),
-    operation_description="Добавление новой кошки",
+    operation_description="Добавление нового котенка",
     responses={
-        201: openapi.Response("Кошка успешно создана", CatDetailedSerializer),
+        201: openapi.Response("Котенок успешно добавлен", CatDetailedSerializer),
         400: openapi.Response("Некорректные данные"),
         403: openapi.Response("Доступ запрещен"),
         500: openapi.Response("Внутренняя ошибка сервера"),
@@ -289,9 +270,9 @@ def post_cats(request):
     method="get",
     operation_description="Получение подробной информации о котенке",
     responses={
-        200: openapi.Response("Успешное получение", CatDetailedSerializer),
+        200: openapi.Response("Успех", CatDetailedSerializer),
         403: openapi.Response("Доступ запрещен"),
-        404: openapi.Response("Не найдено кошек"),
+        404: openapi.Response("Не найдено котят"),
     },
 )
 @api_view(["GET"])
@@ -310,15 +291,17 @@ def get_cat(request, pk, format=None):
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            "color": openapi.Schema(type=openapi.TYPE_STRING, description="Цвет кошки"),
+            "color": openapi.Schema(
+                type=openapi.TYPE_STRING, description="Цвет котенка"
+            ),
             "age": openapi.Schema(
-                type=openapi.TYPE_INTEGER, description="Возраст кошки в месяцах"
+                type=openapi.TYPE_INTEGER, description="Возраст котенка в месяцах"
             ),
             "description": openapi.Schema(
-                type=openapi.TYPE_STRING, description="Описание кошки"
+                type=openapi.TYPE_STRING, description="Описание котенка"
             ),
             "kind": openapi.Schema(
-                type=openapi.TYPE_STRING, description="Порода кошки"
+                type=openapi.TYPE_STRING, description="Порода котенка"
             ),
         },
     ),
@@ -327,7 +310,7 @@ def get_cat(request, pk, format=None):
         200: openapi.Response("Успешное обновление", CatDetailedSerializer),
         400: openapi.Response("Некорректные данные"),
         403: openapi.Response("Доступ запрещен"),
-        404: openapi.Response("Кошка не найдена"),
+        404: openapi.Response("Котенок не найден"),
         500: openapi.Response("Внутренняя ошибка сервера"),
     },
 )
@@ -358,11 +341,11 @@ def put_cat(request, pk, format=None):
 
 @swagger_auto_schema(
     method="delete",
-    operation_description="Удаление кошки",
+    operation_description="Удаление котенка",
     responses={
         200: openapi.Response("Успешное удаление"),
         403: openapi.Response("Доступ запрещен"),
-        404: openapi.Response("Кошка не найдена"),
+        404: openapi.Response("Котенок не найден"),
         500: openapi.Response("Внутренняя ошибка сервера"),
     },
 )
