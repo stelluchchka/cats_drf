@@ -6,10 +6,9 @@ from cats_app.serializers import (
     KindSerializer,
     CatDetailedSerializer,
     UserSerializer,
-    LoginResponseSerializer
+    LoginResponseSerializer,
 )
 from cats_app.models import Cat, Kind
-from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from django.db.models import Q
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -24,25 +23,29 @@ from drf_yasg import openapi
 
 
 @swagger_auto_schema(
-    method='post',
+    method="post",
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            'username': openapi.Schema(type=openapi.TYPE_STRING, description='Никнейм'),
-            'email': openapi.Schema(type=openapi.TYPE_STRING, description='Электронная почта'),
-            'first_name': openapi.Schema(type=openapi.TYPE_STRING, description='Имя'),
-            'last_name': openapi.Schema(type=openapi.TYPE_STRING, description='Фамилия'),
-            'password': openapi.Schema(type=openapi.TYPE_STRING, description='Пароль'),
-        }
+            "username": openapi.Schema(type=openapi.TYPE_STRING, description="Никнейм"),
+            "email": openapi.Schema(
+                type=openapi.TYPE_STRING, description="Электронная почта"
+            ),
+            "first_name": openapi.Schema(type=openapi.TYPE_STRING, description="Имя"),
+            "last_name": openapi.Schema(
+                type=openapi.TYPE_STRING, description="Фамилия"
+            ),
+            "password": openapi.Schema(type=openapi.TYPE_STRING, description="Пароль"),
+        },
     ),
     operation_description="Регистрация нового пользователя",
     responses={
         201: openapi.Response("Успешная регистрация", UserSerializer),
         400: openapi.Response("Ошибка при регистрации"),
-        500: openapi.Response("Внутренняя ошибка сервера")
-    }
+        500: openapi.Response("Внутренняя ошибка сервера"),
+    },
 )
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def register(request):
     try:
@@ -81,29 +84,28 @@ def register(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
     except Exception as e:
-        return Response(
-            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @swagger_auto_schema(
-    method='post',
+    method="post",
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            'username': openapi.Schema(type=openapi.TYPE_STRING, description='Имя пользователя'),
-            'password': openapi.Schema(type=openapi.TYPE_STRING, description='Пароль'),
-        }
+            "username": openapi.Schema(
+                type=openapi.TYPE_STRING, description="Имя пользователя"
+            ),
+            "password": openapi.Schema(type=openapi.TYPE_STRING, description="Пароль"),
+        },
     ),
     operation_description="Авторизация пользователя",
     responses={
         200: openapi.Response("Успешная авторизация", LoginResponseSerializer),
         400: openapi.Response("Неверные учетные данные"),
-        500: openapi.Response("Внутренняя ошибка сервера")
-    }
+        500: openapi.Response("Внутренняя ошибка сервера"),
+    },
 )
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def login(request):
     try:
@@ -132,31 +134,28 @@ def login(request):
         )
 
     except PermissionDenied as e:
-        return Response(
-            {"error": str(e.detail)}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"error": str(e.detail)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
-        return Response(
-            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @swagger_auto_schema(
-    method='post',
+    method="post",
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            'refresh': openapi.Schema(type=openapi.TYPE_STRING, description='Refresh token'),
-        }
+            "refresh": openapi.Schema(
+                type=openapi.TYPE_STRING, description="Refresh token"
+            ),
+        },
     ),
     operation_description="Выход из системы",
     responses={
         200: openapi.Response("Успешный выход"),
         400: openapi.Response("Неверный refresh token или отсутствует refresh token"),
-    }
+    },
 )
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def logout(request):
     refresh_token = request.data.get("refresh")
@@ -175,14 +174,13 @@ def logout(request):
     return Response({"success": "Выход успешен"}, status=status.HTTP_200_OK)
 
 
-
 @swagger_auto_schema(
-    method='get',
+    method="get",
     operation_description="Получение списка пород",
     responses={
         200: openapi.Response("Успешное получение", KindSerializer),
-        500: openapi.Response("Внутренняя ошибка сервера")
-    }
+        500: openapi.Response("Внутренняя ошибка сервера"),
+    },
 )
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -196,23 +194,23 @@ def get_kinds(request, format=None):
 
 
 @swagger_auto_schema(
-    method='get',
+    method="get",
     manual_parameters=[
         openapi.Parameter(
             name="kind",
             in_=openapi.IN_QUERY,
             type=openapi.TYPE_STRING,
             description="Порда кошки для фильтрации",
-            required=False
+            required=False,
         ),
     ],
     operation_description="Получение отфильтрованных кошек",
     responses={
         200: openapi.Response("Успешное получение", CatSerializer(many=True)),
         404: openapi.Response("Не найдено кошек такой породы"),
-    }
+    },
 )
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def get_filtered_cats(request, format=None):
     try:
@@ -228,16 +226,15 @@ def get_filtered_cats(request, format=None):
         return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
 
-
 @swagger_auto_schema(
-    method='get',
+    method="get",
     operation_description="Получение списка кошек",
     responses={
         200: openapi.Response("Успешное получение", CatSerializer(many=True)),
-        404: openapi.Response("Не найдено кошек")
-    }
+        404: openapi.Response("Не найдено кошек"),
+    },
 )
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def get_cats(request, format=None):
     try:
@@ -245,32 +242,33 @@ def get_cats(request, format=None):
         serializer = CatSerializer(cats, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
-        return Response(
-            {"error": str(e)}, status=status.HTTP_404_NOT_FOUND
-        )
-
+        return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
 
 @swagger_auto_schema(
-    method='post',
+    method="post",
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            'color': openapi.Schema(type=openapi.TYPE_STRING, description='Цвет кошки'),
-            'age': openapi.Schema(type=openapi.TYPE_INTEGER, description='Возраст кошки в месяцах'),
-            'description': openapi.Schema(type=openapi.TYPE_STRING, description='Описание кошки'),
-            'kind': openapi.Schema(type=openapi.TYPE_STRING, description='Порда кошки'),
-        }
+            "color": openapi.Schema(type=openapi.TYPE_STRING, description="Цвет кошки"),
+            "age": openapi.Schema(
+                type=openapi.TYPE_INTEGER, description="Возраст кошки в месяцах"
+            ),
+            "description": openapi.Schema(
+                type=openapi.TYPE_STRING, description="Описание кошки"
+            ),
+            "kind": openapi.Schema(type=openapi.TYPE_STRING, description="Порда кошки"),
+        },
     ),
     operation_description="Добавление новой кошки",
     responses={
         201: openapi.Response("Кошка успешно создана", CatDetailedSerializer),
         400: openapi.Response("Некорректные данные"),
         403: openapi.Response("Доступ запрещен"),
-        500: openapi.Response("Внутренняя ошибка сервера")
-    }
+        500: openapi.Response("Внутренняя ошибка сервера"),
+    },
 )
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def post_cats(request):
     try:
@@ -284,48 +282,45 @@ def post_cats(request):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
-        return Response(
-            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @swagger_auto_schema(
-    method='get',
+    method="get",
     operation_description="Получение подробной информации о котенке",
     responses={
         200: openapi.Response("Успешное получение", CatDetailedSerializer),
         403: openapi.Response("Доступ запрещен"),
         404: openapi.Response("Не найдено кошек"),
-    }
+    },
 )
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsOwnerOrReadOnly])
 def get_cat(request, pk, format=None):
     try:
-        cat = get_object_or_404(
-            Cat.objects.filter(is_deleted=False), pk=pk
-        )
+        cat = get_object_or_404(Cat.objects.filter(is_deleted=False), pk=pk)
         serializer = CatDetailedSerializer(cat)
         return Response(serializer.data)
     except Exception as e:
-        return Response(
-            {"error": str(e)}, status=status.HTTP_404_NOT_FOUND
-        )
-
+        return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
 
 @swagger_auto_schema(
-    method='put',
+    method="put",
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            'color': openapi.Schema(type=openapi.TYPE_STRING, description='Цвет кошки'),
-            'age': openapi.Schema(type=openapi.TYPE_INTEGER, description='Возраст кошки в месяцах'),
-            'description': openapi.Schema(type=openapi.TYPE_STRING, description='Описание кошки'),
-            'kind': openapi.Schema(type=openapi.TYPE_STRING, description='Порода кошки'),
-        }
+            "color": openapi.Schema(type=openapi.TYPE_STRING, description="Цвет кошки"),
+            "age": openapi.Schema(
+                type=openapi.TYPE_INTEGER, description="Возраст кошки в месяцах"
+            ),
+            "description": openapi.Schema(
+                type=openapi.TYPE_STRING, description="Описание кошки"
+            ),
+            "kind": openapi.Schema(
+                type=openapi.TYPE_STRING, description="Порода кошки"
+            ),
+        },
     ),
     operation_description="Обновление информации о кошке",
     responses={
@@ -334,9 +329,9 @@ def get_cat(request, pk, format=None):
         403: openapi.Response("Доступ запрещен"),
         404: openapi.Response("Кошка не найдена"),
         500: openapi.Response("Внутренняя ошибка сервера"),
-    }
+    },
 )
-@api_view(['PUT'])
+@api_view(["PUT"])
 @permission_classes([IsOwnerOrReadOnly])
 def put_cat(request, pk, format=None):
     try:
@@ -346,7 +341,7 @@ def put_cat(request, pk, format=None):
                 {"error": "Доступ запрещен"}, status=status.HTTP_403_FORBIDDEN
             )
         cat_serializer = CatDetailedSerializer(cat, data=request.data, partial=True)
-        kind_name = request.data.get('kind', None)
+        kind_name = request.data.get("kind", None)
         if cat_serializer.is_valid():
             if kind_name:
                 kind, _ = Kind.objects.get_or_create(name=kind_name)
@@ -356,27 +351,22 @@ def put_cat(request, pk, format=None):
                 cat_serializer.save()
                 return Response(cat_serializer.data)
         else:
-            return Response(
-                cat_serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response(cat_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
-        return Response(
-            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @swagger_auto_schema(
-    method='delete',
+    method="delete",
     operation_description="Удаление кошки",
     responses={
         200: openapi.Response("Успешное удаление"),
         403: openapi.Response("Доступ запрещен"),
         404: openapi.Response("Кошка не найдена"),
         500: openapi.Response("Внутренняя ошибка сервера"),
-    }
+    },
 )
-@api_view(['DELETE'])
+@api_view(["DELETE"])
 @permission_classes([IsOwnerOrReadOnly])
 def delete_cat(request, pk, format=None):
     try:
@@ -392,6 +382,4 @@ def delete_cat(request, pk, format=None):
             status=status.HTTP_200_OK,
         )
     except Exception as e:
-        return Response(
-            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

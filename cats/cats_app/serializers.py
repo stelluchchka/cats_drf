@@ -29,9 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["username", "email", "first_name", "last_name"]
-        # extra_kwargs = {
-        #     'password': {'write_only': True},
-        # }
+
 
 class LoginResponseSerializer(serializers.Serializer):
     refresh = serializers.CharField(required=True, allow_blank=False)

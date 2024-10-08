@@ -47,15 +47,6 @@ class User(AbstractBaseUser):
         return True
 
 
-class UserToken(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    refresh_token = models.CharField(max_length=500, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.username} token"
-
-
 class Cat(models.Model):
     color = models.CharField(max_length=32, verbose_name="Цвет котенка")
     age = models.IntegerField(verbose_name="Возраст в месяцах котенка")
