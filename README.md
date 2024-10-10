@@ -30,7 +30,7 @@
 
 1. Установите Python и необходимые зависимости: `pip install -r requirements.txt`
 
-2. Клонируйте репозиторий: `git clone https://github.com/your_username/cats_drf.git`
+2. Клонируйте репозиторий: `git clone https://github.com/stelluchchka/cats_drf.git`
 
 3. Настройте базу данных в settings.py.
 
