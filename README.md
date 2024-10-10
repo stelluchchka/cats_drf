@@ -40,7 +40,7 @@
 
 1. Убедитесь, что у вас установлен Docker и Docker Compose.
 
-2. Клонируйте репозиторий: `git clone https://github.com/your_username/cats_drf.git`
+2. Клонируйте репозиторий: `git clone [https://github.com/stelluchchka/cats_drf.git](https://github.com/stelluchchka/cats_drf.git)`
 
 3. Перейдите в директорию проекта: `cd cats_drf`
 
