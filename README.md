@@ -18,6 +18,7 @@
 - Python
 - Django
 - Django Rest Framework
+- PostgreSQL
 - Docker
 - Docker Compose
 - Swagger/OpenAPI
